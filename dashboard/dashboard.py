@@ -30,10 +30,10 @@ max_date = all_df["order_approved_at"].max()
 # Sidebar
 with st.sidebar:
     # Title
-    st.title("Fiqry nih")
+    st.title("Fiqry Diky W")
 
-    # Logo Image
-    st.image("./dashboard/gcl.png")
+    # # Logo Image
+    # st.image("./dashboard/gcl.png")
 
     # Date Range
     start_date, end_date = st.date_input(
