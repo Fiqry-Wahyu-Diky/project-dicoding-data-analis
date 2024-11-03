@@ -105,6 +105,7 @@ sns.barplot(x="product_count", y="product_category_name_english", data=item_summ
 axes[0].set_title("Most Sold Products")
 axes[0].set_xlabel("Product Count")
 axes[0].set_ylabel("Product Category")
+axes[0].tick_params(axis='y', rotation=0)  # Rotate y-axis labels to horizontal
 
 # Least Sold Products
 sns.barplot(x="product_count", y="product_category_name_english",
@@ -113,7 +114,10 @@ axes[1].set_title("Least Sold Products")
 axes[1].invert_xaxis()
 axes[1].set_xlabel("Product Count")
 axes[1].set_ylabel("Product Category")
+axes[1].tick_params(axis='y', rotation=0)  # Rotate y-axis labels to horizontal
 
+# Set more space between labels
+plt.tight_layout()  # Adjust the layout
 st.pyplot(fig3)
 
 # Skor Ulasan
