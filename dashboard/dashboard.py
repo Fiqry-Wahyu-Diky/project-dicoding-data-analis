@@ -34,7 +34,7 @@ with st.sidebar:
     st.title("Fiqry Wahyu Diky W.")
 
     # Logo Image
-    st.image("gcl.png")
+    st.image("https://raw.githubusercontent.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis/main/dashboard/gcl.png")
 
     # Date Range
     start_date, end_date = st.date_input(
