@@ -97,7 +97,7 @@ with col2:
     avg_spend = format_currency(sum_spend_df["total_spend"].mean(), "IDR", locale="id_ID")
     st.markdown(f"Average Spend: **{avg_spend}**")
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(50, 25))
 ax.plot(
     sum_spend_df["order_approved_at"],
     sum_spend_df["total_spend"],
@@ -121,7 +121,7 @@ with col2:
     avg_items = sum_order_items_df["product_count"].mean()
     st.markdown(f"Average Items: **{avg_items}**")
 
-fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(100, 50))
+fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(45, 25))
 
 colors = ["#068DA9", "#D3D3D3", "#D3D3D3", "#D3D3D3", "#D3D3D3"]
 
