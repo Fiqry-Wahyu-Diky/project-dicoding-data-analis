@@ -26,8 +26,19 @@ Proyek ini memerlukan Python versi 3.9 atau lebih baru. Untuk menjalankan aplika
    
 3. Install pustaka yang diperlukan:
    ```bash
+   pip install streamlit
    pip install -r dashboard/requirements.txt
 
 ### 2. Menjalankan aplikasi
+#### Online
+Anda bisa menjalankan aplikasi melalui online dengan mengeklik link di bawah ini:
+``` bash
+https://e-commerceanalysis.streamlit.app/
+```
 
-1. 
+#### Offline
+Untuk secara offline jalankan perintah berikut:
+1. Masuk ke direktori lokal yang sudah diclone:
+``` bash
+cd project-dicoding-data-analis/dashboard
+streamlit run dashboard.py
