@@ -21,8 +21,11 @@ Proyek ini memerlukan Python versi 3.9 atau lebih baru. Untuk menjalankan aplika
 ### 1. Siapkan Environment
 
 1. Clone repository ini ke komputer lokal Anda menggunakan perintah berikut:
+   ``` bash
+   git clone https://github.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis.git
    
 3. Install pustaka yang diperlukan:
+   ```bash
    pip install -r dashboard/requirements.txt
 
 ### 2. Menjalankan aplikasi
