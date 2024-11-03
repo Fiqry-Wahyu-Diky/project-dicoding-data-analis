@@ -7,165 +7,214 @@ import urllib
 from func import DataAnalyzer, BrazilMapPlotter
 from babel.numbers import format_currency
 
-sns.set_theme(style='darkgrid')
+sns.set(style='dark')
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
-# Membaca Dataset
-datetime_fields = ["order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date",
-                   "order_estimated_delivery_date", "order_purchase_timestamp", "shipping_limit_date"]
-order_data = pd.read_csv("https://raw.githubusercontent.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis/main/data/all_data.csv")
-order_data.sort_values("order_approved_at", inplace=True)
-order_data.reset_index(drop=True, inplace=True)
+# Dataset
+datetime_cols = ["order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date",
+                 "order_estimated_delivery_date", "order_purchase_timestamp", "shipping_limit_date"]
+all_df = pd.read_csv("https://raw.githubusercontent.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis/main/data/all_data.csv")
+all_df.sort_values(by="order_approved_at", inplace=True)
+all_df.reset_index(inplace=True)
 
-# Dataset Geolokasi
-geo_data = pd.read_csv("https://raw.githubusercontent.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis/main/data/geolocation.csv")
-unique_customers = geo_data.drop_duplicates(subset='customer_unique_id')
+# Geolocation Dataset
+geolocation = pd.read_csv("https://raw.githubusercontent.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis/main/data/geolocation.csv")
+data = geolocation.drop_duplicates(subset='customer_unique_id')
 
-# Konversi kolom tanggal ke tipe datetime
-for field in datetime_fields:
-    order_data[field] = pd.to_datetime(order_data[field])
+for col in datetime_cols:
+    all_df[col] = pd.to_datetime(all_df[col])
 
-start_range = order_data["order_approved_at"].min()
-end_range = order_data["order_approved_at"].max()
+min_date = all_df["order_approved_at"].min()
+max_date = all_df["order_approved_at"].max()
 
 # Sidebar
 with st.sidebar:
-    st.title("Fiqry Wahyu Diky W.")
-    # st.image("https://raw.githubusercontent.com/Fiqry-Wahyu-Diky/project-dicoding-data-analis/main/dashboard/gcl.png")
-    start_date, end_date = st.date_input("Select Date Range", value=[start_range, end_range], min_value=start_range, max_value=end_range)
+    # Title
+    st.title("Sulistiawan A. P.")
 
-# Filter berdasarkan tanggal yang dipilih
-filtered_data = order_data[(order_data["order_approved_at"] >= str(start_date)) & (order_data["order_approved_at"] <= str(end_date))]
+    # Logo Image
+    st.image("./dashboard/gcl.png")
 
-# Membuat objek analyzer dan plotter
-analyzer = DataAnalyzer(filtered_data)
-map_plotter = BrazilMapPlotter(unique_customers, plt, mpimg, urllib, st)
+    # Date Range
+    start_date, end_date = st.date_input(
+        label="Select Date Range",
+        value=[min_date, max_date],
+        min_value=min_date,
+        max_value=max_date
+    )
 
-# Analisis Data
-daily_orders = analyzer.create_daily_orders_df()
-spending_summary = analyzer.create_sum_spend_df()
-item_summary = analyzer.create_sum_order_items_df()
-review_data, popular_score = analyzer.review_score_df()
-state_data, popular_state = analyzer.create_bystate_df()
-order_status_data, frequent_status = analyzer.create_order_status()
+# Main
+main_df = all_df[(all_df["order_approved_at"] >= str(start_date)) &
+                 (all_df["order_approved_at"] <= str(end_date))]
 
-# Header Dashboard
-st.title("E-Commerce Dashboard :convenience_store:")
-st.markdown("This dashboard provides insights into the e-commerce data.")
+function = DataAnalyzer(main_df)
+map_plot = BrazilMapPlotter(data, plt, mpimg, urllib, st)
 
-# Pesanan Harian
+daily_orders_df = function.create_daily_orders_df()
+sum_spend_df = function.create_sum_spend_df()
+sum_order_items_df = function.create_sum_order_items_df()
+review_score, common_score = function.review_score_df()
+state, most_common_state = function.create_bystate_df()
+order_status, common_status = function.create_order_status()
+
+# Title
+st.header("E-Commerce Dashboard :convenience_store:")
+
+# Daily Orders
 st.subheader("Daily Orders")
+
 col1, col2 = st.columns(2)
 
 with col1:
-    order_count = daily_orders["order_count"].sum()
-    st.markdown(f"Total Orders: **{order_count}**")
+    total_order = daily_orders_df["order_count"].sum()
+    st.markdown(f"Total Order: **{total_order}**")
 
 with col2:
-    revenue = format_currency(daily_orders["revenue"].sum(), "IDR", locale="id_ID")
-    st.markdown(f"Total Revenue: **{revenue}**")
+    total_revenue = format_currency(daily_orders_df["revenue"].sum(), "IDR", locale="id_ID")
+    st.markdown(f"Total Revenue: **{total_revenue}**")
 
-fig1, ax1 = plt.subplots(figsize=(12, 6))
-ax1.plot(daily_orders["order_approved_at"], daily_orders["order_count"], marker="o", linewidth=2, color="#90CAF9")
-ax1.tick_params(axis="x", rotation=45)
-st.pyplot(fig1)
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.plot(
+    daily_orders_df["order_approved_at"],
+    daily_orders_df["order_count"],
+    marker="o",
+    linewidth=2,
+    color="#90CAF9"
+)
+ax.tick_params(axis="x", rotation=45)
+ax.tick_params(axis="y", labelsize=15)
+st.pyplot(fig)
 
-# Pengeluaran Pelanggan
-st.subheader("Customer Spending")
+# Customer Spend Money
+st.subheader("Customer Spend Money")
 col1, col2 = st.columns(2)
 
 with col1:
-    total_spending = format_currency(spending_summary["total_spend"].sum(), "IDR", locale="id_ID")
-    st.markdown(f"Total Spending: **{total_spending}**")
+    total_spend = format_currency(sum_spend_df["total_spend"].sum(), "IDR", locale="id_ID")
+    st.markdown(f"Total Spend: **{total_spend}**")
 
 with col2:
-    average_spending = format_currency(spending_summary["total_spend"].mean(), "IDR", locale="id_ID")
-    st.markdown(f"Average Spending: **{average_spending}**")
+    avg_spend = format_currency(sum_spend_df["total_spend"].mean(), "IDR", locale="id_ID")
+    st.markdown(f"Average Spend: **{avg_spend}**")
 
-fig2, ax2 = plt.subplots(figsize=(12, 6))
-ax2.plot(spending_summary["order_approved_at"], spending_summary["total_spend"], marker="o", linewidth=2, color="#90CAF9")
-ax2.tick_params(axis="x", rotation=45)
-st.pyplot(fig2)
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.plot(
+    sum_spend_df["order_approved_at"],
+    sum_spend_df["total_spend"],
+    marker="o",
+    linewidth=2,
+    color="#90CAF9"
+)
+ax.tick_params(axis="x", rotation=45)
+ax.tick_params(axis="y", labelsize=15)
+st.pyplot(fig)
 
-# Item Pesanan
+# Order Items
 st.subheader("Order Items")
 col1, col2 = st.columns(2)
 
 with col1:
-    total_items_ordered = item_summary["product_count"].sum()
-    st.markdown(f"Total Items Ordered: **{total_items_ordered}**")
+    total_items = sum_order_items_df["product_count"].sum()
+    st.markdown(f"Total Items: **{total_items}**")
 
 with col2:
-    avg_items_per_order = item_summary["product_count"].mean()
-    st.markdown(f"Average Items per Order: **{avg_items_per_order:.2f}**")
+    avg_items = sum_order_items_df["product_count"].mean()
+    st.markdown(f"Average Items: **{avg_items}**")
 
-fig3, axes = plt.subplots(1, 2, figsize=(18, 10))
+fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(45, 25))
 
-# Most Sold Products
-sns.barplot(x="product_count", y="product_category_name_english", data=item_summary.head(5), palette="Blues", ax=axes[0])
-axes[0].set_title("Most Sold Products")
-axes[0].set_xlabel("Product Count")
-axes[0].set_ylabel("Product Category")
-axes[0].tick_params(axis='y', rotation=0)  # Rotate y-axis labels to horizontal
+colors = ["#068DA9", "#D3D3D3", "#D3D3D3", "#D3D3D3", "#D3D3D3"]
 
-# Least Sold Products
+sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.head(5), palette=colors,
+            ax=ax[0])
+ax[0].set_ylabel(None)
+ax[0].set_xlabel("Number of Sales", fontsize=30)
+ax[0].set_title("Produk paling banyak terjual", loc="center", fontsize=50)
+ax[0].tick_params(axis='y', labelsize=35)
+ax[0].tick_params(axis='x', labelsize=30)
+
 sns.barplot(x="product_count", y="product_category_name_english",
-            data=item_summary.sort_values(by="product_count", ascending=True).head(5), palette="Blues", ax=axes[1])
-axes[1].set_title("Least Sold Products")
-axes[1].invert_xaxis()
-axes[1].set_xlabel("Product Count")
-axes[1].set_ylabel("Product Category")
-axes[1].tick_params(axis='y', rotation=0)  # Rotate y-axis labels to horizontal
+            data=sum_order_items_df.sort_values(by="product_count", ascending=True).head(5), palette=colors, ax=ax[1])
+ax[1].set_ylabel(None)
+ax[1].set_xlabel("Number of Sales", fontsize=30)
+ax[1].invert_xaxis()
+ax[1].yaxis.set_label_position("right")
+ax[1].yaxis.tick_right()
+ax[1].set_title("Produk paling sedikit terjual", loc="center", fontsize=50)
+ax[1].tick_params(axis='y', labelsize=35)
+ax[1].tick_params(axis='x', labelsize=30)
 
-# Set more space between labels
-plt.tight_layout()  # Adjust the layout
-st.pyplot(fig3)
+st.pyplot(fig)
 
-# Skor Ulasan
-st.subheader("Review Scores")
+# Review Score
+st.subheader("Review Score")
 col1, col2 = st.columns(2)
 
 with col1:
-    avg_review = review_data.mean()
-    st.markdown(f"Average Review Score: **{avg_review:.2f}**")
+    avg_review_score = review_score.mean()
+    st.markdown(f"Average Review Score: **{avg_review_score}**")
 
 with col2:
-    most_frequent_review = review_data.index[0]
-    st.markdown(f"Most Frequent Review Score: **{most_frequent_review}**")
+    most_common_review_score = review_score.value_counts().index[0]
+    st.markdown(f"Most Common Review Score: **{most_common_review_score}**")
 
-fig4, ax4 = plt.subplots(figsize=(12, 6))
-sns.barplot(x=review_data.index, y=review_data.values,
-            palette=["#068DA9" if score == popular_score else "#D3D3D3" for score in review_data.index])
-plt.title("Customer Ratings")
-st.pyplot(fig4)
+fig, ax = plt.subplots(figsize=(12, 6))
+sns.barplot(x=review_score.index,
+            y=review_score.values,
+            order=review_score.index,
+            palette=["#068DA9" if score == common_score else "#D3D3D3" for score in review_score.index]
+            )
 
-# Demografi Pelanggan
-st.subheader("Customer Demographics")
-tab1, tab2, tab3 = st.tabs(["By State", "Order Status", "Geolocation"])
+plt.title("Rating by customers for service", fontsize=15)
+plt.xlabel("Rating")
+plt.ylabel("Count")
+plt.xticks(fontsize=12)
+st.pyplot(fig)
 
-# By State
+# Customer Demographic
+st.subheader("Customer Demographic")
+tab1, tab2, tab3 = st.tabs(["State", "Order Status", "Geolocation"])
+
 with tab1:
-    most_frequent_state = state_data["customer_state"].iloc[0]
-    st.markdown(f"Most Common State: **{most_frequent_state}**")
+    most_common_state = state.customer_state.value_counts().index[0]
+    st.markdown(f"Most Common State: **{most_common_state}**")
 
-    fig5, ax5 = plt.subplots(figsize=(12, 6))
-    sns.barplot(x=state_data["customer_state"], y=state_data["customer_count"],
-                palette=["#068DA9" if s == most_frequent_state else "#D3D3D3" for s in state_data["customer_state"]])
-    plt.title("Customers by State")
-    st.pyplot(fig5)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.barplot(x=state.customer_state.value_counts().index,
+                y=state.customer_count.values,
+                data=state,
+                palette=["#068DA9" if score == most_common_state else "#D3D3D3" for score in
+                         state.customer_state.value_counts().index]
+                )
 
-# Order Status
+    plt.title("Number customers from State", fontsize=15)
+    plt.xlabel("State")
+    plt.ylabel("Number of Customers")
+    plt.xticks(fontsize=12)
+    st.pyplot(fig)
+
 with tab2:
-    frequent_order_status = order_status_data.index[0]
-    st.markdown(f"Most Common Order Status: **{frequent_order_status}**")
+    common_status_ = order_status.value_counts().index[0]
+    st.markdown(f"Most Common Order Status: **{common_status_}**")
 
-    fig6, ax6 = plt.subplots(figsize=(12, 6))
-    sns.barplot(x=order_status_data.index, y=order_status_data.values,
-                palette=["#068DA9" if status == frequent_status else "#D3D3D3" for status in order_status_data.index])
-    plt.title("Order Status Distribution")
-    st.pyplot(fig6)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.barplot(x=order_status.index,
+                y=order_status.values,
+                order=order_status.index,
+                palette=["#068DA9" if score == common_status else "#D3D3D3" for score in order_status.index]
+                )
 
-# Geolocation
+    plt.title("Order Status", fontsize=15)
+    plt.xlabel("Status")
+    plt.ylabel("Count")
+    plt.xticks(fontsize=12)
+    st.pyplot(fig)
+
 with tab3:
-    map_plotter.plot()
-    with st.expander("Explanation"):
-        st.write("Map shows that most customers are located in the southeastern and southern regions, with concentrations in capitals such as São Paulo and Rio de Janeiro.")
+    map_plot.plot()
+
+    with st.expander("See Explanation"):
+        st.write(
+            'Sesuai dengan grafik yang sudah dibuat, ada lebih banyak pelanggan di bagian tenggara dan selatan. Informasi lainnya, ada lebih banyak pelanggan di kota-kota yang merupakan ibu kota (São Paulo, Rio de Janeiro, Porto Alegre, dan lainnya).')
+
+
